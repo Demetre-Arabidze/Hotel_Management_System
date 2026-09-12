@@ -3,9 +3,6 @@ using HMS.Application.Contracts.Services;
 using HMS.Application.Exceptions;
 using HMS.Application.Models.Room;
 using HMS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace HMS.Application.Services
 {
