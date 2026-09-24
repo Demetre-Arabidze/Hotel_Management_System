@@ -4,6 +4,7 @@ using HMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HMS.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912163743_SeedData")]
+    partial class SeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,7 +113,7 @@ namespace HMS.Infrastructure.Migrations
 
                     b.ToTable("Hotels", null, t =>
                         {
-                            t.HasCheckConstraint("CK_Hotels_Rating", "[Rating] >= 0.0 AND [Rating] <= 5");
+                            t.HasCheckConstraint("CK_Hotels_Rating", "[Rating] >= 1 AND [Rating] <= 5");
                         });
 
                     b.HasData(
@@ -359,22 +362,6 @@ namespace HMS.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("a0000000-0000-0000-0000-000000000000"),
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "00000000-0000-0000-0000-000000000000",
-                            Email = "admin@hms.com",
-                            EmailConfirmed = true,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ADMIN@HMS.COM",
-                            NormalizedUserName = "ADMIN@HMS.COM",
-                            PasswordHash = "AQAAAAEAACcQAAAAEAEBAQEBAQEBAQEBAQEBAQFgQSgkAKOAlM4nL+ruW1lW8cX7LQFBLSFMhGfkRpgdtA==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "00000000-0000-0000-0000-000000000000",
-                            TwoFactorEnabled = false,
-                            UserName = "admin@hms.com"
-                        },
-                        new
-                        {
                             Id = new Guid("a0000000-0000-0000-0000-000000000001"),
                             AccessFailedCount = 0,
                             ConcurrencyStamp = "00000000-0000-0000-0000-000000000001",
@@ -383,7 +370,7 @@ namespace HMS.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "MANAGER@HMS.COM",
                             NormalizedUserName = "MANAGER@HMS.COM",
-                            PasswordHash = "AQAAAAEAACcQAAAAEAEBAQEBAQEBAQEBAQEBAQFgQSgkAKOAlM4nL+ruW1lW8cX7LQFBLSFMhGfkRpgdtA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK2/S7m4L1KzP6/1Z8M2N8R2L1P3R5T7V9X1Z3A5B7C9D1E3F5G7H9I0==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000001",
                             TwoFactorEnabled = false,
@@ -399,7 +386,7 @@ namespace HMS.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "GUEST@HMS.COM",
                             NormalizedUserName = "GUEST@HMS.COM",
-                            PasswordHash = "AQAAAAEAACcQAAAAEAICAgICAgICAgICAgICAgL2rbbBkaJpmUNkK8uDDH5I10HuF26q4gmKLVeIu9jHBg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH3/A9M2K4L6P8/2a9N3O9S3M2Q4S6U8W0Y2A4B6C8D0E2F4G6H8I9==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "00000000-0000-0000-0000-000000000002",
                             TwoFactorEnabled = false,
@@ -542,11 +529,6 @@ namespace HMS.Infrastructure.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
 
                     b.HasData(
-                        new
-                        {
-                            UserId = new Guid("a0000000-0000-0000-0000-000000000000"),
-                            RoleId = new Guid("11111111-1111-1111-1111-111111111111")
-                        },
                         new
                         {
                             UserId = new Guid("a0000000-0000-0000-0000-000000000001"),

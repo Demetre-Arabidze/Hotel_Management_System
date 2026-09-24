@@ -1,5 +1,6 @@
 ﻿using HMS.Application.Contracts.Services;
 using HMS.Application.Models.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,6 +36,13 @@ namespace HMS.API.Controllers
         {
             var result = await _authService.RegisterManagerAsync(dto);
             return Ok(result);
+        }
+
+        [HttpPost("register/admin")]
+        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminDto dto)
+        {
+            var response = await _authService.RegisterAdminAsync(dto);
+            return Ok(response);
         }
     }
 }

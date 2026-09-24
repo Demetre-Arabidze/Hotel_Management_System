@@ -7,7 +7,7 @@ namespace HMS.Application.Contracts.Services
         Task<IEnumerable<HotelResponseDto>> GetAllAsync();
         Task<HotelResponseDto> GetByIdAsync(Guid id);
         Task<HotelResponseDto> CreateAsync(HotelCreateUpdateDto dto);
-        Task UpdateAsync(Guid id, HotelCreateUpdateDto dto);
+        Task UpdateAsync(Guid id, HotelCreateUpdateDto dto, Guid userId, bool isAdmin);
         Task DeleteAsync(Guid id);
     }
 }

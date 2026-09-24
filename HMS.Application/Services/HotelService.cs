@@ -11,19 +11,22 @@ namespace HMS.Application.Services
     {
         private readonly IRepositoryBase<Hotel> _hotelRepository;
         private readonly IReservationRepository _reservationRepository;
+        private readonly IRepositoryBase<Manager> _managerRepository; // Inject Manager repo
 
         public HotelService(
             IRepositoryBase<Hotel> hotelRepository,
-            IReservationRepository reservationRepository)
+            IReservationRepository reservationRepository,
+            IRepositoryBase<Manager> managerRepository) // Update constructor
         {
             _hotelRepository = hotelRepository;
             _reservationRepository = reservationRepository;
+            _managerRepository = managerRepository;
         }
 
         public async Task<IEnumerable<HotelResponseDto>> GetAllAsync()
         {
-            var hotels = await _hotelRepository.GetAllAsync(tracking: false);
-            return hotels.Adapt<IEnumerable<HotelResponseDto>>();
+            var (hotels, totalCount) = await _hotelRepository.GetAllAsync();
+            return hotels.Adapt<List<HotelResponseDto>>();
         }
 
         public async Task<HotelResponseDto> GetByIdAsync(Guid id)
@@ -41,6 +44,7 @@ namespace HMS.Application.Services
                 throw new BadRequestException($"Hotel with name '{dto.Name}' already exists.");
 
             var hotel = dto.Adapt<Hotel>();
+            hotel.Rating = 0.0m;
             hotel.Id = Guid.NewGuid();
 
             await _hotelRepository.AddAsync(hotel);
@@ -49,15 +53,29 @@ namespace HMS.Application.Services
             return hotel.Adapt<HotelResponseDto>();
         }
 
-        public async Task UpdateAsync(Guid id, HotelCreateUpdateDto dto)
+        public async Task UpdateAsync(Guid id, HotelCreateUpdateDto dto, Guid userId, bool isAdmin)
         {
+            // 1. Check if the hotel exists
             var hotel = await _hotelRepository.GetAsync(h => h.Id == id, tracking: true);
             if (hotel == null)
                 throw new NotFoundException(nameof(Hotel), id);
 
+            // 2. DOMAIN SECURITY CHECK: If not Admin, ensure Manager owns this hotel
+            if (!isAdmin)
+            {
+                var manager = await _managerRepository.GetAsync(m => m.UserId == userId);
+                if (manager == null || manager.HotelId != id)
+                {
+                    // Throws an exception that your Global Handler will eventually catch
+                    throw new UnauthorizedAccessException("You are only authorized to update your assigned hotel.");
+                }
+            }
+
+            // 3. Prevent duplicate names
             if (await _hotelRepository.ExistsAsync(h => h.Name == dto.Name && h.Id != id))
                 throw new BadRequestException($"Another hotel with name '{dto.Name}' already exists.");
 
+            // 4. Update and save
             dto.Adapt(hotel);
             await _hotelRepository.SaveAsync();
         }

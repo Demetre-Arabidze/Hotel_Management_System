@@ -9,17 +9,20 @@ namespace HMS.Application.Services
     public class ReservationService : IReservationService
     {
         private readonly IReservationRepository _reservationRepository;
+        private readonly IRoomRepository _roomRepository;
         private readonly IRepositoryBase<Guest> _guestRepository;
 
         public ReservationService(
             IReservationRepository reservationRepository,
+            IRoomRepository roomRepository,
             IRepositoryBase<Guest> guestRepository)
         {
             _reservationRepository = reservationRepository;
+            _roomRepository = roomRepository;
             _guestRepository = guestRepository;
         }
 
-        public async Task<Guid> CreateAsync(Guid hotelId, ReservationCreateDto dto)
+        public async Task<Guid> CreateAsync(Guid hotelId, Guid userId, ReservationCreateDto dto)
         {
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
@@ -32,10 +35,17 @@ namespace HMS.Application.Services
             if (dto.RoomIds == null || !dto.RoomIds.Any())
                 throw new BadRequestException("At least one room must be selected.");
 
-            var guest = await _guestRepository.GetAsync(g => g.Id == dto.GuestId);
-            if (guest == null)
-                throw new NotFoundException(nameof(Guest), dto.GuestId);
+            // 1. HOTEL-ROOM VALIDATION: Ensure all room IDs exist under the route's hotelId
+            bool doRoomsBelongToHotel = await _roomRepository.DoRoomsBelongToHotelAsync(dto.RoomIds, hotelId);
+            if (!doRoomsBelongToHotel)
+                throw new BadRequestException("One or more selected rooms do not belong to the specified hotel.");
 
+            // 2. SECURE GUEST RESOLUTION
+            var guest = await _guestRepository.GetAsync(g => g.UserId == userId);
+            if (guest == null)
+                throw new Exception("Guest profile not found for the current user.");
+
+            // 3. OVERLAP CHECK
             bool hasConflict = await _reservationRepository.HasRoomConflictAsync(
                 dto.RoomIds,
                 dto.CheckInDate,
@@ -47,7 +57,7 @@ namespace HMS.Application.Services
             var reservation = new Reservation
             {
                 Id = Guid.NewGuid(),
-                GuestId = dto.GuestId,
+                GuestId = guest.Id,
                 CheckInDate = dto.CheckInDate,
                 CheckOutDate = dto.CheckOutDate,
                 ReservationRooms = dto.RoomIds.Select(roomId => new ReservationRoom

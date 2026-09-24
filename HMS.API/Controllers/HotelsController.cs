@@ -2,6 +2,7 @@
 using HMS.Application.Models.Hotel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HMS.API.Controllers
 {
@@ -33,7 +34,7 @@ namespace HMS.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin")] // FIXED: Only Admin can create
         public async Task<IActionResult> CreateHotel([FromBody] HotelCreateUpdateDto createDto)
         {
             var createdHotel = await _hotelService.CreateAsync(createDto);
@@ -41,15 +42,23 @@ namespace HMS.API.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin,Manager")] // FIXED: Admin or Manager
         public async Task<IActionResult> UpdateHotel(Guid id, [FromBody] HotelCreateUpdateDto updateDto)
         {
-            await _hotelService.UpdateAsync(id, updateDto);
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdString, out Guid userId))
+                return Unauthorized("Invalid user token.");
+
+            bool isAdmin = User.IsInRole("Admin");
+
+            // Pass the identity down to the service for domain-level security
+            await _hotelService.UpdateAsync(id, updateDto, userId, isAdmin);
+
             return NoContent();
         }
 
         [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "Manager")]
+        [Authorize(Roles = "Admin")] // FIXED: Only Admin can delete
         public async Task<IActionResult> DeleteHotel(Guid id)
         {
             await _hotelService.DeleteAsync(id);

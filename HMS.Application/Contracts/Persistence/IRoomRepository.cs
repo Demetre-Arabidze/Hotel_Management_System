@@ -22,5 +22,7 @@ namespace HMS.Application.Contracts.Persistence
         Task<bool> HasActiveOrFutureReservationsAsync(
             Guid roomId,
             DateOnly today);
+
+        Task<bool> DoRoomsBelongToHotelAsync(IEnumerable<Guid> roomIds, Guid hotelId);
     }
 }

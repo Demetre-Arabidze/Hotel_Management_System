@@ -100,6 +100,18 @@ namespace HMS.Application.Services
             return BuildAuthResponse(userId, dto.Email, roles);
         }
 
+        public async Task<AuthResponseDto> RegisterAdminAsync(RegisterAdminDto dto)
+        {
+            var (succeeded, userId, errors) = await _identityService.CreateUserAsync(dto.Email, dto.Password);
+            if (!succeeded)
+                throw new BadRequestException(string.Join(", ", errors));
+
+            await _identityService.AddToRoleAsync(userId, UserRole.Admin.ToString());
+
+            var roles = await _identityService.GetRolesAsync(userId);
+            return BuildAuthResponse(userId, dto.Email, roles);
+        }
+
         private AuthResponseDto BuildAuthResponse(Guid userId, string email, IList<string> roles)
         {
             var (token, expiration) = _jwtTokenGenerator.GenerateToken(userId, email, roles);

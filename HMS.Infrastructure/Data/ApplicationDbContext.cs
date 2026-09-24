@@ -31,6 +31,8 @@ namespace HMS.Infrastructure.Data
             ConfigureGuest(builder);
             ConfigureReservation(builder);
             ConfigureReservationRoom(builder);
+
+            builder.SeedData();
         }
 
 
@@ -42,7 +44,7 @@ namespace HMS.Infrastructure.Data
                 entity.ToTable("Hotels", table =>
                     table.HasCheckConstraint(
                         "CK_Hotels_Rating",
-                        "[Rating] >= 1 AND [Rating] <= 5"));
+                        "[Rating] >= 0.0 AND [Rating] <= 5"));
 
                 entity.HasKey(x => x.Id);
 

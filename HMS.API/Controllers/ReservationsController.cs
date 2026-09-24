@@ -2,6 +2,7 @@
 using HMS.Application.Models.Reservation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HMS.API.Controllers
 {
@@ -17,11 +18,20 @@ namespace HMS.API.Controllers
             _reservationService = reservationService;
         }
 
-        [HttpPost]
+        [HttpPost("~/api/hotels/{hotelId}/reservations")] // Explicit route mapping
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> CreateReservation(Guid hotelId, [FromBody] ReservationCreateDto dto)
         {
-            var reservationId = await _reservationService.CreateAsync(hotelId, dto);
+            // Securely extract the UserId from the logged-in JWT token
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            // Pass hotelId and userId down to the service
+            var reservationId = await _reservationService.CreateAsync(hotelId, userId, dto);
+
             return Ok(new { Id = reservationId });
         }
 

@@ -67,5 +67,17 @@ namespace HMS.Infrastructure.Persistence
                 x => x.RoomId == roomId &&
                      x.Reservation.CheckOutDate >= today);
         }
+
+        public async Task<bool> DoRoomsBelongToHotelAsync(IEnumerable<Guid> roomIds, Guid hotelId)
+        {
+            var distinctRoomIds = roomIds.Distinct().ToList();
+
+            // Query SQL Server with a single COUNT query
+            var validCount = await _context.Rooms
+                .Where(r => distinctRoomIds.Contains(r.Id) && r.HotelId == hotelId)
+                .CountAsync();
+
+            return validCount == distinctRoomIds.Count;
+        }
     }
 }
