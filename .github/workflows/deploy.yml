@@ -1,0 +1,40 @@
+name: Deploy HMS.Api
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Stop and remove previous containers
+        run: docker compose down --remove-orphans
+
+      - name: Build and start containers
+        run: docker compose up --build -d
+
+      - name: Wait for API to become healthy
+        run: |
+          for i in $(seq 1 20); do
+            status=$(docker inspect --format='{{.State.Health.Status}}' hms-api 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "hms-api is healthy"
+              exit 0
+            fi
+            echo "Waiting for hms-api to be healthy (attempt $i)... current status: $status"
+            sleep 5
+          done
+          echo "hms-api did not become healthy in time"
+          exit 1
+
+      - name: Show container status
+        if: always()
+        run: docker compose ps
+
+      - name: Show recent logs
+        if: always()
+        run: docker compose logs --tail=100 hms-api
