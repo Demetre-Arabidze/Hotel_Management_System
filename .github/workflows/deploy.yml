@@ -2,7 +2,7 @@ name: Deploy HMS.Api
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   deploy:
