@@ -27,7 +27,7 @@ namespace HMS.API.Controllers
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetHotelById(Guid id)
         {
-            var hotel = await _hotelService.GetByIdAsync(id);
+            var hotel = await _hotelService.GetByIdWithDetailsAsync(id);
             if (hotel == null) return NotFound("Hotel not found.");
 
             return Ok(hotel);

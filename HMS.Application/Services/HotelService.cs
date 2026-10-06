@@ -9,12 +9,12 @@ namespace HMS.Application.Services
 {
     public class HotelService : IHotelService
     {
-        private readonly IRepositoryBase<Hotel> _hotelRepository;
+        private readonly IHotelRepository _hotelRepository;
         private readonly IReservationRepository _reservationRepository;
         private readonly IRepositoryBase<Manager> _managerRepository; // Inject Manager repo
 
         public HotelService(
-            IRepositoryBase<Hotel> hotelRepository,
+            IHotelRepository hotelRepository,
             IReservationRepository reservationRepository,
             IRepositoryBase<Manager> managerRepository) // Update constructor
         {
@@ -27,6 +27,15 @@ namespace HMS.Application.Services
         {
             var (hotels, totalCount) = await _hotelRepository.GetAllAsync();
             return hotels.Adapt<List<HotelResponseDto>>();
+        }
+
+        public async Task<HotelWithManagerDto> GetByIdWithDetailsAsync(Guid id)
+        {
+            var hotel = await _hotelRepository.GetByIdWithDetailsAsync(id);
+            if (hotel == null)
+                throw new NotFoundException(nameof(Hotel), id);
+
+            return hotel.Adapt<HotelWithManagerDto>();
         }
 
         public async Task<HotelResponseDto> GetByIdAsync(Guid id)

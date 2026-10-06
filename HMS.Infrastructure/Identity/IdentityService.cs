@@ -1,4 +1,5 @@
 ﻿using HMS.Application.Contracts.Services;
+using HMS.Application.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace HMS.Infrastructure.Identity
@@ -26,6 +27,10 @@ namespace HMS.Infrastructure.Identity
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, password))
                 return (false, Guid.Empty);
+
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                throw new BadRequestException("Please confirm your email address before logging in.");
+
             return (true, user.Id);
         }
 
@@ -42,6 +47,44 @@ namespace HMS.Infrastructure.Identity
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             return await _userManager.GetRolesAsync(user!);
+        }
+
+        public async Task<string> GenerateRefreshTokenAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+
+            // Generate a secure random token
+            var refreshToken = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+
+            // Store it in Identity's AspNetUserTokens table
+            await _userManager.SetAuthenticationTokenAsync(user!, "HMS", "RefreshToken", refreshToken);
+
+            return refreshToken;
+        }
+
+        public async Task RevokeRefreshTokenAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user != null)
+            {
+                await _userManager.RemoveAuthenticationTokenAsync(user, "HMS", "RefreshToken");
+            }
+        }
+
+        public async Task<string> GenerateEmailConfirmationTokenAsync(Guid userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            return await _userManager.GenerateEmailConfirmationTokenAsync(user!);
+        }
+
+        public async Task<(bool Succeeded, IEnumerable<string> Errors)> ConfirmEmailAsync(Guid userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return (false, new[] { "User not found." });
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            return (result.Succeeded, result.Errors.Select(e => e.Description));
         }
     }
 }

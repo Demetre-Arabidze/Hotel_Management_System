@@ -14,5 +14,6 @@ namespace HMS.Domain.Entities
 
         public ICollection<Manager> Managers { get; set; } = new List<Manager>();
         public ICollection<Room> Rooms { get; set; } = new List<Room>();
+        public List<Review> Reviews { get; set; } = new();
     }
 }

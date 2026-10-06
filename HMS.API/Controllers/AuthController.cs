@@ -1,8 +1,8 @@
 ﻿using HMS.Application.Contracts.Services;
 using HMS.Application.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HMS.API.Controllers
 {
@@ -43,6 +43,29 @@ namespace HMS.API.Controllers
         {
             var response = await _authService.RegisterAdminAsync(dto);
             return Ok(response);
+        }
+
+        [Authorize] // Only logged-in users can log out
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            // Extract the UserId from the JWT token claims
+            var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (Guid.TryParse(userIdString, out Guid userId))
+            {
+                await _authService.LogoutAsync(userId);
+                return Ok(new { message = "Successfully logged out. Refresh token revoked." });
+            }
+
+            return BadRequest("Invalid user token.");
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] Guid userId, [FromQuery] string token)
+        {
+            await _authService.ConfirmEmailAsync(userId, token);
+            return Ok(new { message = "Email confirmed successfully! You can now log in." });
         }
     }
 }

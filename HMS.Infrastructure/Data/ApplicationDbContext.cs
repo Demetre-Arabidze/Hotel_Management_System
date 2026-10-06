@@ -20,6 +20,7 @@ namespace HMS.Infrastructure.Data
         public DbSet<Guest> Guests => Set<Guest>();
         public DbSet<Reservation> Reservations => Set<Reservation>();
         public DbSet<ReservationRoom> ReservationRooms => Set<ReservationRoom>();
+        public DbSet<Review> Reviews => Set<Review>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,6 +32,7 @@ namespace HMS.Infrastructure.Data
             ConfigureGuest(builder);
             ConfigureReservation(builder);
             ConfigureReservationRoom(builder);
+            ConfigureReview(builder);
 
             builder.SeedData();
         }
@@ -237,6 +239,21 @@ namespace HMS.Infrastructure.Data
                     .WithMany(x => x.ReservationRooms)
                     .HasForeignKey(x => x.RoomId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+        }
+
+        private static void ConfigureReview(ModelBuilder builder)
+        {
+            builder.Entity<Review>(builder =>
+            {
+                builder.HasKey(r => r.Id);
+                builder.Property(r => r.Rating).IsRequired();
+                builder.Property(r => r.Comment).HasMaxLength(1000);
+
+                builder.HasOne(r => r.Hotel)
+                       .WithMany(h => h.Reviews)
+                       .HasForeignKey(r => r.HotelId)
+                       .OnDelete(DeleteBehavior.Cascade);
             });
         }
         #endregion
